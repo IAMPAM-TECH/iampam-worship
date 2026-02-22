@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" href="favicon.png" type="image/png" />
+    <title>예배 자동화-메인(Serverless)</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+      }
+
+      .container {
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        padding: 40px;
+        max-width: 800px;
+        width: 100%;
+        text-align: center;
+      }
+
+      .header {
+        margin-bottom: 40px;
+      }
+
+      .header h1 {
+        color: #333;
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 10px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+
+      .header p {
+        color: #666;
+        font-size: 1.1rem;
+        line-height: 1.6;
+      }
+
+      .version {
+        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        color: white;
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        display: inline-block;
+        margin-top: 10px;
+      }
+
+      .serverless-badge {
+        background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+        color: white;
+        padding: 4px 12px;
+        border-radius: 12px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        display: inline-block;
+        margin-left: 10px;
+      }
+
+      .menu-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 20px;
+        margin-top: 30px;
+      }
+
+      .menu-item {
+        background: white;
+        border: 2px solid #f0f0f0;
+        border-radius: 15px;
+        padding: 30px 20px;
+        text-decoration: none;
+        color: #333;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .menu-item:hover {
+        transform: translateY(-5px);
+        border-color: #667eea;
+        box-shadow: 0 10px 25px rgba(102, 126, 234, 0.2);
+      }
+
+      .menu-item::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        transform: scaleX(0);
+        transition: transform 0.3s ease;
+      }
+
+      .menu-item:hover::before {
+        transform: scaleX(1);
+      }
+
+      .menu-icon {
+        font-size: 3rem;
+        margin-bottom: 15px;
+        display: block;
+      }
+
+      .menu-title {
+        font-size: 1.3rem;
+        font-weight: 600;
+        margin-bottom: 10px;
+        color: #333;
+      }
+
+      .menu-description {
+        font-size: 0.9rem;
+        color: #666;
+        line-height: 1.5;
+      }
+
+      .worship {
+        border-color: #4caf50;
+      }
+
+      .worship:hover {
+        border-color: #4caf50;
+        box-shadow: 0 10px 25px rgba(76, 175, 80, 0.2);
+      }
+
+      .worship::before {
+        background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
+      }
+
+      .admin {
+        border-color: #2196f3;
+      }
+
+      .admin:hover {
+        border-color: #2196f3;
+        box-shadow: 0 10px 25px rgba(33, 150, 243, 0.2);
+      }
+
+      .admin::before {
+        background: linear-gradient(135deg, #2196f3 0%, #1976d2 100%);
+      }
+
+      .explorer {
+        border-color: #ff9800;
+      }
+
+      .explorer:hover {
+        border-color: #ff9800;
+        box-shadow: 0 10px 25px rgba(255, 152, 0, 0.2);
+      }
+
+      .explorer::before {
+        background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+      }
+
+      .bible {
+        border-color: #9c27b0;
+      }
+
+      .bible:hover {
+        border-color: #9c27b0;
+        box-shadow: 0 10px 25px rgba(156, 39, 176, 0.2);
+      }
+
+      .bible::before {
+        background: linear-gradient(135deg, #9c27b0 0%, #7b1fa2 100%);
+      }
+
+      .transcribe {
+        border-color: #e91e63;
+      }
+
+      .transcribe:hover {
+        border-color: #e91e63;
+        box-shadow: 0 10px 25px rgba(233, 30, 99, 0.2);
+      }
+
+      .transcribe::before {
+        background: linear-gradient(135deg, #e91e63 0%, #c2185b 100%);
+      }
+
+      .footer {
+        margin-top: 40px;
+        padding-top: 20px;
+        border-top: 1px solid #eee;
+        color: #999;
+        font-size: 0.9rem;
+      }
+
+      .footer p {
+        margin: 5px 0;
+      }
+
+      .api-info {
+        background: #f8f9fa;
+        border: 1px solid #e9ecef;
+        border-radius: 10px;
+        padding: 15px;
+        margin-top: 20px;
+        font-family: "Courier New", monospace;
+        font-size: 0.85rem;
+        color: #495057;
+      }
+
+      @media (max-width: 768px) {
+        .container {
+          padding: 20px;
+          margin: 10px;
+        }
+
+        .header h1 {
+          font-size: 2rem;
+        }
+
+        .menu-grid {
+          grid-template-columns: 1fr;
+          gap: 15px;
+        }
+
+        .menu-item {
+          padding: 25px 15px;
+        }
+      }
+
+      .loading {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(255, 255, 255, 0.9);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s ease;
+      }
+
+      .loading.show {
+        opacity: 1;
+        visibility: visible;
+      }
+
+      .loading-spinner {
+        width: 50px;
+        height: 50px;
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid #667eea;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="loading" id="loading">
+      <div class="loading-spinner"></div>
+    </div>
+
+    <div class="container">
+      <div class="header">
+        <h1>
+          예배 자동화 메인<span class="serverless-badge">Serverless</span>
+        </h1>
+        <p>
+          AWS Serverless 기반 교회용 예배 기획, 콘텐츠 관리 및 프레젠테이션,
+          자동 찬송 반주 서비스
+        </p>
+        <div class="version">v2.3</div>
+      </div>
+
+      <div class="menu-grid">
+        <a
+          href="worship.html"
+          class="menu-item worship"
+          target="_blank"
+          onclick="showLoading()"
+        >
+          <span class="menu-icon">🎵</span>
+          <div class="menu-title">예배 프레젠테이션</div>
+          <div class="menu-description">
+            교회용 로그인 후 예배 서비스를 위한 화면으로 진행합니다.<br />
+            찬송, 성경, 교독, 찬양 등을 동적으로 표시합니다.
+          </div>
+        </a>
+
+        <a
+          href="admin.html"
+          class="menu-item admin"
+          target="_blank"
+          onclick="showLoading()"
+        >
+          <span class="menu-icon">⚙️</span>
+          <div class="menu-title">예배 기획 관리</div>
+          <div class="menu-description">
+            교회용 예배 서비스 기획을 관리합니다.<br />
+            찬송, 성경, 교독, 찬양 등을 서비스별로 구성하고 저장합니다.
+          </div>
+        </a>
+
+        <a
+          href="s3explorer.html"
+          class="menu-item explorer"
+          target="_blank"
+          onclick="showLoading()"
+        >
+          <span class="menu-icon">🔍</span>
+          <div class="menu-title">S3 파일 탐색기</div>
+          <div class="menu-description">
+            S3에 저장된 예배 자료들을 탐색하고 관리합니다.<br />
+            파일 업로드, 폴더 관리 등을 가능합니다.
+          </div>
+        </a>
+
+        <a
+          href="onlinebible.html"
+          class="menu-item bible"
+          target="_blank"
+          onclick="showLoading()"
+        >
+          <span class="menu-icon">📖</span>
+          <div class="menu-title">온라인 성경</div>
+          <div class="menu-description">
+            다양한 번역본의 성경을 읽고 검색할 수 있습니다.<br />
+            개역개정, 쉬운성경, KJV, NIV 등 지원합니다.
+          </div>
+        </a>
+
+        <a
+          href="transcribe.html"
+          class="menu-item transcribe"
+          target="_blank"
+          onclick="showLoading()"
+        >
+          <span class="menu-icon">🎤</span>
+          <div class="menu-title">음성파일 텍스트추출</div>
+          <div class="menu-description">
+            음성 설교 파일 업로드 시 설교 텍스트 AI 추출<br />
+            AWS Transcribe를 활용한 자동 음성 인식 서비스
+          </div>
+        </a>
+      </div>
+
+      <div class="api-info">
+        <strong>API Gateway URL:</strong><br />
+        https://yl8j0hj690.execute-api.ap-northeast-2.amazonaws.com
+      </div>
+
+      <div class="footer">
+        <p><strong>개발자:</strong> 김완중집사</p>
+        <p><strong>최종 업데이트:</strong> 2025.8.5</p>
+        <p>
+          <strong>아키텍처:</strong> AWS Lambda + API Gateway + DynamoDB + S3
+        </p>
+        <p>
+          <strong>주요 기능:</strong> Serverless 백엔드, 교회용 로그인, DynamoDB
+          기반 인증, 온라인 성경 서비스
+        </p>
+      </div>
+    </div>
+
+    <script>
+      // 로딩 표시 함수
+      function showLoading() {
+        const loading = document.getElementById("loading");
+        loading.classList.add("show");
+
+        // 1초 후 로딩 숨김 (페이지 전환 시)
+        setTimeout(() => {
+          loading.classList.remove("show");
+        }, 1000);
+      }
+
+      // 페이지 로드 시 애니메이션
+      document.addEventListener("DOMContentLoaded", function () {
+        const menuItems = document.querySelectorAll(".menu-item");
+
+        menuItems.forEach((item, index) => {
+          item.style.opacity = "0";
+          item.style.transform = "translateY(20px)";
+
+          setTimeout(() => {
+            item.style.transition = "all 0.5s ease";
+            item.style.opacity = "1";
+            item.style.transform = "translateY(0)";
+          }, index * 200);
+        });
+      });
+
+      // 키보드 단축키 지원
+      document.addEventListener("keydown", function (e) {
+        switch (e.key) {
+          case "1":
+            if (e.ctrlKey || e.metaKey) {
+              e.preventDefault();
+              showLoading();
+              window.open("worship.html", "_blank");
+            }
+            break;
+          case "2":
+            if (e.ctrlKey || e.metaKey) {
+              e.preventDefault();
+              showLoading();
+              window.open("admin.html", "_blank");
+            }
+            break;
+          case "3":
+            if (e.ctrlKey || e.metaKey) {
+              e.preventDefault();
+              showLoading();
+              window.open("s3explorer.html", "_blank");
+            }
+            break;
+          case "4":
+            if (e.ctrlKey || e.metaKey) {
+              e.preventDefault();
+              showLoading();
+              window.open("onlinebible.html", "_blank");
+            }
+            break;
+          case "5":
+            if (e.ctrlKey || e.metaKey) {
+              e.preventDefault();
+              showLoading();
+              window.open("transcribe.html", "_blank");
+            }
+            break;
+        }
+      });
+
+      // 터치 스와이프 지원
+      let touchStartY = 0;
+      let touchEndY = 0;
+
+      document.addEventListener("touchstart", function (e) {
+        touchStartY = e.changedTouches[0].screenY;
+      });
+
+      document.addEventListener("touchend", function (e) {
+        touchEndY = e.changedTouches[0].screenY;
+        handleSwipe();
+      });
+
+      function handleSwipe() {
+        const swipeThreshold = 50;
+        const diff = touchStartY - touchEndY;
+
+        if (Math.abs(diff) > swipeThreshold) {
+          if (diff > 0) {
+            // 위로 스와이프 - 새로고침
+            location.reload();
+          }
+        }
+      }
+    </script>
+  </body>
+</html>

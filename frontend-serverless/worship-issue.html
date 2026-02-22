@@ -1,0 +1,1402 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" href="favicon.png" type="image/png" />
+    <title>예배 프레젠테이션</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Malgun Gothic", sans-serif;
+        background: #000;
+        overflow: hidden;
+        height: 100vh;
+      }
+
+      .presentation-container {
+        width: 100vw;
+        height: 100vh;
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .slide {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: absolute;
+        top: 0;
+        left: 0;
+        opacity: 0;
+        transition: opacity 0.27s ease-in-out;
+        z-index: 1;
+      }
+
+      .slide.active {
+        opacity: 1;
+        z-index: 2;
+      }
+
+      .slide.fade-out {
+        opacity: 0;
+        transition: opacity 0.27s ease-in-out;
+        z-index: 0;
+      }
+
+      .slide img {
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: contain;
+        border-radius: 8px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      }
+
+      .bible-content {
+        color: white;
+        text-align: center;
+        padding: 40px 30px;
+        width: 95%;
+        height: 95%;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        background: rgba(0, 0, 0, 0.85);
+        border-radius: 18px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7);
+        overflow: hidden;
+      }
+
+      .bible-title {
+        font-size: clamp(1.4em, 2.8vw, 2.1em); /* 30% 감소 */
+        font-weight: bold;
+        margin-bottom: 20px;
+        color: #ffd700;
+        text-shadow: 2px 2px 8px #222;
+        flex-shrink: 0;
+      }
+
+      .bible-verses-container {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start; /* 상단 정렬로 변경하여 아래로 배치 */
+        align-items: center;
+        width: 100%;
+        overflow: hidden;
+        padding-top: 5%; /* 상단에 5% 여백 추가하여 아래로 배치 */
+      }
+
+      .bible-verse {
+        font-size: clamp(1.95em, 3.9vw, 2.86em);
+        line-height: 1.6;
+        margin-bottom: 25px; /* 15px에서 25px로 증가 */
+        text-align: left;
+        letter-spacing: 0.02em;
+        word-break: keep-all;
+        text-shadow: 1px 1px 8px #222;
+        max-width: 100%;
+        display: flex;
+        align-items: flex-start;
+        width: 100%; /* 줄바꿈 시 항상 왼쪽 정렬 */
+        padding: 8px 0; /* 상하 패딩 추가 */
+      }
+
+      .verse-number {
+        color: #ffd700;
+        font-weight: bold;
+        margin-right: 27px; /* 50% 증가: 18px → 27px */
+        font-size: 1.1em;
+        text-shadow: 1px 1px 6px #222;
+        flex-shrink: 0;
+        min-width: fit-content;
+      }
+
+      .bible-text-line {
+        color: #fff;
+        text-shadow: 1px 1px 8px #222, 0 0 2px #ffd700;
+        font-weight: normal; /* 일반 구절은 normal로 설정 */
+        display: block;
+        text-align: left;
+        word-break: keep-all;
+        width: 100%;
+        line-height: 1.6;
+        margin-bottom: 8px; /* 5px에서 8px로 증가 */
+        font-size: 1.15em; /* 15% 증가 */
+        padding: 2px 0; /* 상하 패딩 추가 */
+      }
+
+      /* 강조 구절 스타일 */
+      .bible-text-line.strong {
+        font-weight: bold; /* 강조 구절은 bold로 설정 */
+        background: linear-gradient(135deg, #ffff00 0%, #ffeb3b 100%);
+        color: #000;
+        padding: 4px 8px;
+        border-radius: 6px;
+        text-shadow: none;
+        display: inline-block;
+        margin: 2px 0;
+        box-shadow: 0 2px 8px rgba(255, 235, 59, 0.4);
+        border: 2px solid #ffc107;
+        font-size: 1.15em; /* 일반 구절과 동일한 크기 */
+        letter-spacing: 0.5px;
+      }
+
+      .loading {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        color: white;
+        font-size: 18px;
+      }
+
+      .error {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        color: #ff6b6b;
+        font-size: 18px;
+        text-align: center;
+        background: rgba(0, 0, 0, 0.8);
+        padding: 20px;
+        border-radius: 10px;
+      }
+
+      .fade-in {
+        animation: fadeIn 0.5s ease-in;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+
+      .fullscreen-btn {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        background: rgba(0, 0, 0, 0.7);
+        color: white;
+        border: none;
+        padding: 10px 15px;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 14px;
+        z-index: 100;
+        transition: opacity 0.3s;
+      }
+
+      .fullscreen-btn:hover {
+        background: rgba(0, 0, 0, 0.9);
+      }
+
+      .slide-info {
+        position: absolute;
+        top: 20px;
+        left: 20px;
+        background: rgba(0, 0, 0, 0.7);
+        color: white;
+        padding: 10px 15px;
+        border-radius: 5px;
+        font-size: 14px;
+        z-index: 100;
+        transition: opacity 0.3s;
+      }
+
+      .slide-counter {
+        position: absolute;
+        bottom: 20px;
+        right: 20px;
+        background: rgba(0, 0, 0, 0.7);
+        color: white;
+        padding: 10px 15px;
+        border-radius: 5px;
+        font-size: 14px;
+        z-index: 100;
+        transition: opacity 0.3s;
+      }
+
+      .controls {
+        position: absolute;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        gap: 10px;
+        z-index: 100;
+        transition: opacity 0.3s;
+      }
+
+      .control-btn {
+        background: rgba(0, 0, 0, 0.7);
+        color: white;
+        border: none;
+        padding: 10px 15px;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 14px;
+        transition: background 0.3s;
+      }
+
+      .control-btn:hover {
+        background: rgba(0, 0, 0, 0.9);
+      }
+
+      /* 전체화면 모드에서 UI 숨기기 */
+      .fullscreen .slide-info,
+      .fullscreen .slide-counter,
+      .fullscreen .controls,
+      .fullscreen .fullscreen-btn {
+        opacity: 0;
+        pointer-events: none;
+      }
+
+      /* 전체화면 모드에서 이미지 전체화면 */
+      .fullscreen .slide img {
+        width: 100vw;
+        height: 100vh;
+        object-fit: contain;
+        border-radius: 0;
+      }
+
+      /* 전체화면 모드에서 성경 구절 가독성 개선 */
+      .fullscreen .bible-content {
+        padding: 60px 50px;
+        background: rgba(0, 0, 0, 0.9);
+        border-radius: 0;
+        width: 100vw;
+        height: 100vh;
+      }
+
+      .fullscreen .bible-title {
+        font-size: clamp(1.75em, 3.5vw, 2.8em); /* 30% 감소 */
+        margin-bottom: 40px;
+        text-shadow: 3px 3px 12px #222;
+      }
+
+      .fullscreen .bible-verses-container {
+        max-width: 90%;
+        width: 100%;
+        justify-content: flex-start; /* 상단 정렬로 변경하여 아래로 배치 */
+        padding-top: 8%; /* 전체화면에서 더 넓은 상단 여백 */
+      }
+
+      .fullscreen .bible-verse {
+        font-size: clamp(2.2em, 4.5vw, 3.5em);
+        line-height: 1.8;
+        margin-bottom: 30px;
+        text-shadow: 2px 2px 12px #222;
+        max-height: 2.5em; /* 최대 2줄 제한 */
+        overflow: hidden;
+        display: flex;
+        align-items: flex-start;
+        padding: 8px 0;
+      }
+
+      /* 강조된 구절이 포함된 경우 높이 제한 해제 (JavaScript로 처리) */
+      .fullscreen .bible-verse.has-strong-verse {
+        max-height: none;
+        overflow: visible;
+      }
+
+      .fullscreen .verse-number {
+        font-size: 1.2em;
+        margin-right: 35px;
+        text-shadow: 2px 2px 8px #222;
+        flex-shrink: 0;
+        min-width: fit-content;
+      }
+
+      .fullscreen .bible-text-line {
+        font-size: 1.15em; /* 15% 증가 */
+        line-height: inherit;
+        text-shadow: 2px 2px 12px #222, 0 0 4px #ffd700;
+        font-weight: normal; /* 일반 구절은 normal로 설정 */
+        margin-bottom: 6px;
+        display: block;
+        word-break: keep-all;
+        hyphens: none;
+        -webkit-hyphens: none;
+        -moz-hyphens: none;
+        -ms-hyphens: none;
+        padding: 2px 0;
+      }
+
+      .fullscreen .bible-text-line.strong {
+        font-weight: bold; /* 강조 구절은 bold로 설정 */
+        background: linear-gradient(
+          135deg,
+          #ffff00 0%,
+          #ffeb3b 50%,
+          #ffc107 100%
+        );
+        color: #000;
+        padding: 8px 12px;
+        border-radius: 8px;
+        text-shadow: none;
+        display: inline-block;
+        margin: 4px 0;
+        box-shadow: 0 4px 16px rgba(255, 193, 7, 0.6),
+          0 0 20px rgba(255, 235, 59, 0.3);
+        border: 3px solid #ff9800;
+        font-size: 1.15em; /* 일반 구절과 동일한 크기 */
+        letter-spacing: 0.8px;
+        transform: scale(1.02);
+        transition: all 0.3s ease;
+        position: relative;
+        z-index: 10;
+      }
+
+      .fullscreen .bible-text-line.strong:hover {
+        transform: scale(1.05);
+        box-shadow: 0 6px 20px rgba(255, 193, 7, 0.8),
+          0 0 25px rgba(255, 235, 59, 0.5);
+      }
+
+      .fullscreen .bible-text-line.strong::before {
+        content: "";
+        position: absolute;
+        top: -2px;
+        left: -2px;
+        right: -2px;
+        bottom: -2px;
+        background: linear-gradient(45deg, #ff9800, #ffc107, #ffeb3b, #ffff00);
+        border-radius: 10px;
+        z-index: -1;
+        opacity: 0.7;
+      }
+
+      /* 슬라이드 전환 애니메이션 개선 */
+      .slide {
+        will-change: transform, opacity;
+      }
+
+      /* 첫 번째 슬라이드 로드 시 애니메이션 */
+      .slide:first-child.active {
+        animation: initialFadeIn 1s ease-out;
+      }
+
+      @keyframes initialFadeIn {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+
+      .slide-image-16by9 {
+        position: relative;
+        width: 100%;
+        aspect-ratio: 16 / 9;
+        background: #000;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .slide-image-cover {
+        width: 100%;
+        height: 100%;
+        object-fit: contain; /* cover → contain */
+        object-position: center;
+        display: block;
+        background: #000;
+      }
+    </style>
+  </head>
+  <body>
+    <div
+      id="login-section"
+      style="
+        width: 100vw;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: #222;
+        z-index: 1000;
+        position: fixed;
+        top: 0;
+        left: 0;
+      "
+    >
+      <div
+        style="
+          background: #fff;
+          padding: 36px 32px 32px 32px;
+          border-radius: 18px;
+          box-shadow: 0 4px 24px rgba(80, 80, 120, 0.1);
+          min-width: 320px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 18px;
+        "
+      >
+        <select
+          id="worshipFolderSelect"
+          style="
+            width: 220px;
+            padding: 12px 10px;
+            border-radius: 8px;
+            border: 1.2px solid #e5e7ef;
+            font-size: 1em;
+            margin-bottom: 10px;
+          "
+        ></select>
+        <input
+          type="text"
+          id="username"
+          value="admin"
+          readonly
+          style="
+            width: 220px;
+            padding: 12px 10px;
+            border-radius: 8px;
+            border: 1.2px solid #e5e7ef;
+            font-size: 1em;
+            margin-bottom: 10px;
+          "
+        />
+        <input
+          type="password"
+          id="password"
+          placeholder="비밀번호"
+          style="
+            width: 220px;
+            padding: 12px 10px;
+            border-radius: 8px;
+            border: 1.2px solid #e5e7ef;
+            font-size: 1em;
+            margin-bottom: 10px;
+          "
+        />
+        <button
+          onclick="login()"
+          style="
+            width: 220px;
+            padding: 13px 0;
+            border-radius: 8px;
+            border: none;
+            background: #7b8cff;
+            color: #fff;
+            font-size: 1.08em;
+            font-weight: 500;
+            cursor: pointer;
+          "
+        >
+          로그인
+        </button>
+        <div
+          id="loginError"
+          style="color: #e74c3c; margin-top: 8px; font-size: 1em; display: none"
+        ></div>
+      </div>
+    </div>
+    <div class="presentation-container" style="display: none">
+      <div class="loading">예배 데이터를 불러오는 중...</div>
+      <div class="slide-info"></div>
+      <div class="slide-counter"></div>
+      <button class="fullscreen-btn" onclick="toggleFullscreen()">
+        전체화면
+      </button>
+      <div class="controls">
+        <button class="control-btn" onclick="previousSlide()">이전</button>
+        <button class="control-btn" onclick="toggleAutoPlay()" id="autoPlayBtn">
+          자동재생
+        </button>
+        <button class="control-btn" onclick="nextSlide()">다음</button>
+      </div>
+    </div>
+
+    <script>
+      // API 베이스 URL
+      const API_BASE =
+        window.location.hostname === "localhost" ||
+        window.location.hostname === "127.0.0.1"
+          ? "http://localhost:3000/api"
+          : "https://yl8j0hj690.execute-api.ap-northeast-2.amazonaws.com/api";
+
+      let worshipData = null;
+      let currentSlideIndex = 0;
+      let currentImageIndex = 0;
+      let slides = [];
+      let autoPlayInterval = null;
+      let isAutoPlaying = false;
+      let selectedWorshipFolder = "";
+      let isLoggedIn = false;
+
+      async function loadWorshipFolders() {
+        try {
+          const res = await fetch(`${API_BASE}/churches`);
+          if (!res.ok) {
+            throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+          }
+          const data = await res.json();
+          const select = document.getElementById("worshipFolderSelect");
+          select.innerHTML = '<option value="">교회 선택</option>';
+
+          if (data && data.length > 0) {
+            data.forEach((church) => {
+              const opt = document.createElement("option");
+              opt.value = church.folder;
+              opt.textContent = church.name;
+              select.appendChild(opt);
+            });
+          } else {
+            // 기본 교회 목록 제공
+            const defaultChurches = ["hishalom", "test", "demo"];
+            defaultChurches.forEach((church) => {
+              const opt = document.createElement("option");
+              opt.value = church;
+              opt.textContent = church;
+              select.appendChild(opt);
+            });
+            console.log(
+              "DynamoDB에서 교회 목록을 찾을 수 없어 기본 목록을 제공합니다."
+            );
+          }
+
+          select.addEventListener("change", (e) => {
+            selectedWorshipFolder = e.target.value;
+          });
+        } catch (error) {
+          console.error("교회 목록 로드 오류:", error);
+          const select = document.getElementById("worshipFolderSelect");
+          select.innerHTML = '<option value="">교회 선택</option>';
+
+          // 에러 시에도 기본 교회 목록 제공
+          const defaultChurches = ["hishalom", "test", "demo"];
+          defaultChurches.forEach((church) => {
+            const opt = document.createElement("option");
+            opt.value = church;
+            opt.textContent = church;
+            select.appendChild(opt);
+          });
+        }
+      }
+
+      async function login() {
+        const username = document.getElementById("username").value;
+        const password = document.getElementById("password").value;
+        const loginError = document.getElementById("loginError");
+        loginError.style.display = "none";
+        if (!selectedWorshipFolder) {
+          loginError.textContent = "교회(폴더)를 선택하세요.";
+          loginError.style.display = "block";
+          return;
+        }
+        const response = await fetch(`${API_BASE}/admin-login`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            id: username,
+            password,
+            folder: selectedWorshipFolder,
+          }),
+        });
+        const data = await response.json();
+        if (data.success) {
+          isLoggedIn = true;
+          document.getElementById("login-section").style.display = "none";
+          document.querySelector(".presentation-container").style.display = "";
+          loadWorshipData(selectedWorshipFolder);
+        } else {
+          loginError.textContent = "아이디 또는 비밀번호가 올바르지 않습니다.";
+          loginError.style.display = "block";
+        }
+      }
+
+      // 예배 데이터 처리
+      async function processWorshipData() {
+        const loadingElement = document.querySelector(".loading");
+        loadingElement.style.display = "none";
+
+        for (let i = 0; i < worshipData.Worship.length; i++) {
+          const step = worshipData.Worship[i];
+          const slideImages = await getSlideImages(step);
+
+          // 빈 이미지 배열인 경우 해당 스텝을 건너뛰기
+          if (slideImages.length === 0) {
+            console.log(
+              `Step ${i + 1}: ${step.Type} - 빈 Content로 인해 건너뜀`
+            );
+            continue;
+          }
+
+          for (let j = 0; j < slideImages.length; j++) {
+            slides.push({
+              step: step,
+              imagePath: slideImages[j],
+              stepIndex: i,
+              imageIndex: j,
+            });
+          }
+        }
+
+        if (slides.length > 0) {
+          showSlide(0);
+          updateSlideCounter();
+        } else {
+          showError("표시할 슬라이드가 없습니다.");
+        }
+      }
+
+      // 슬라이드 이미지 경로 생성
+      async function getSlideImages(step) {
+        const type = step.Type;
+        const content = step.Content;
+
+        // 성경인 경우 - S3에서 JSON 데이터를 가져와서 처리
+        if (type === "성경") {
+          try {
+            const response = await fetch(
+              `${API_BASE}/bible?book=${encodeURIComponent(
+                content.book
+              )}&chapter=${content.chapter}&startVerse=${
+                content.startVerse
+              }&endVerse=${content.endVerse}`
+            );
+            if (response.ok) {
+              const verses = await response.json();
+              return [verses]; // 성경 구절 데이터를 반환
+            } else {
+              console.error("성경 구절을 가져올 수 없습니다.");
+              return [];
+            }
+          } catch (error) {
+            console.error("성경 구절 조회 오류:", error);
+            return [];
+          }
+        }
+
+        // Content가 비어있거나 null인 경우 빈 배열 반환 (찬양, 찬송, 교독 유형은 제외)
+        let cleanContent = content;
+        if (
+          !content ||
+          (typeof content === "string" && content.trim() === "")
+        ) {
+          // 찬양, 찬송, 교독 유형의 경우 content가 비어있어도 S3 폴더를 확인
+          if (type === "찬양" || type === "찬송" || type === "교독") {
+            console.log(
+              `Step ${step.Step}: ${type} - Content가 비어있지만 S3 폴더를 확인합니다.`
+            );
+            // content가 비어있으면 빈 문자열로 처리 (찬양, 찬송 모두 동일하게)
+            cleanContent = "";
+          } else {
+            console.log(
+              `Step ${step.Step}: ${type} - 빈 Content로 인해 건너뜀`
+            );
+            return [];
+          }
+        } else {
+          // 찬양, 찬송, 교독 유형의 경우 Content에서 접두사 제거하고 끝의 "/" 제거
+          if (type === "찬양" || type === "찬송" || type === "교독") {
+            if (typeof content === "string") {
+              cleanContent = content;
+              // "찬양" 또는 "찬송" 접두사가 있으면 제거
+              if (type === "찬양" && cleanContent.startsWith("찬양")) {
+                cleanContent = cleanContent.substring(3);
+              } else if (type === "찬송" && cleanContent.startsWith("찬송")) {
+                cleanContent = cleanContent.substring(3);
+              }
+              // 끝의 "/" 제거 (찬양, 찬송, 교독 모두 적용)
+              if (cleanContent.endsWith("/")) {
+                cleanContent = cleanContent.slice(0, -1);
+              }
+            }
+          }
+        }
+
+        // 간지 유형 - S3에서 단일 이미지 불러오기
+        if (type === "간지") {
+          return [
+            `${API_BASE}/s3-image?path=${encodeURIComponent(
+              "간지/" + cleanContent + ".png"
+            )}`,
+          ];
+        }
+
+        // 자료 유형 - S3에서 단일 이미지 불러오기
+        if (type === "자료") {
+          return [
+            `${API_BASE}/s3-image?path=${encodeURIComponent(
+              "자료/" + cleanContent + ".png"
+            )}`,
+          ];
+        }
+
+        // 찬양, 찬송, 교독 유형 - S3에서 폴더 내 여러 이미지 불러오기
+        const images = [];
+        try {
+          // URL 인코딩을 두 번 적용하여 한글 폴더명 문제 해결
+          const encodedContent = encodeURIComponent(cleanContent);
+          console.log(
+            `S3 폴더 조회 시도: ${type}/${cleanContent} (encoded: ${encodedContent})`
+          );
+
+          const response = await fetch(
+            `${API_BASE}/s3-folder/${type}/${encodedContent}`
+          );
+          if (response.ok) {
+            const files = await response.json();
+            console.log(
+              `S3 폴더 조회 성공: ${type}/${cleanContent}, 파일 수: ${files.length}`
+            );
+            console.log(`- 파일 목록:`, files);
+
+            // 다양한 파일명 패턴 지원
+            let pageFiles = [];
+
+            // 1. page_001.png, page_002.png 등의 파일들을 순서대로 찾기
+            pageFiles = files
+              .filter((file) => file.match(/^page_\d{3}\.png$/))
+              .sort((a, b) => {
+                // 숫자 부분을 추출하여 숫자로 정렬
+                const numA = parseInt(a.match(/page_(\d+)\.png/)[1]);
+                const numB = parseInt(b.match(/page_(\d+)\.png/)[1]);
+                return numA - numB;
+              });
+
+            // 2. page_001.jpg, page_002.jpg 등의 파일들도 찾기
+            if (pageFiles.length === 0) {
+              pageFiles = files
+                .filter((file) => file.match(/^page_\d{3}\.jpg$/))
+                .sort((a, b) => {
+                  const numA = parseInt(a.match(/page_(\d+)\.jpg/)[1]);
+                  const numB = parseInt(b.match(/page_(\d+)\.jpg/)[1]);
+                  return numA - numB;
+                });
+            }
+
+            // 3. 001.png, 002.png 등의 파일들도 찾기
+            if (pageFiles.length === 0) {
+              pageFiles = files
+                .filter((file) => file.match(/^\d{3}\.png$/))
+                .sort((a, b) => {
+                  const numA = parseInt(a.match(/^(\d+)\.png/)[1]);
+                  const numB = parseInt(b.match(/^(\d+)\.png/)[1]);
+                  return numA - numB;
+                });
+            }
+
+            // 4. 001.jpg, 002.jpg 등의 파일들도 찾기
+            if (pageFiles.length === 0) {
+              pageFiles = files
+                .filter((file) => file.match(/^\d{3}\.jpg$/))
+                .sort((a, b) => {
+                  const numA = parseInt(a.match(/^(\d+)\.jpg/)[1]);
+                  const numB = parseInt(b.match(/^(\d+)\.jpg/)[1]);
+                  return numA - numB;
+                });
+            }
+
+            console.log(`정렬된 페이지 파일들:`, pageFiles);
+
+            // 정렬된 파일들을 이미지 경로로 변환
+            pageFiles.forEach((file) => {
+              // cleanContent가 빈 문자열이면 type/file, 그렇지 않으면 type/content/file 형태로 구성
+              const imagePath = cleanContent
+                ? `${type}/${cleanContent}/${file}`
+                : `${type}/${file}`;
+              images.push(
+                `${API_BASE}/s3-image?path=${encodeURIComponent(imagePath)}`
+              );
+            });
+
+            // 만약 page_xxx.png 파일이 없고 다른 이미지 파일이 있는 경우
+            if (images.length === 0 && files.length > 0) {
+              console.log(
+                `page_xxx.png 파일이 없어서 다른 이미지 파일들을 사용합니다.`
+              );
+              files.forEach((file) => {
+                if (/\.(png|jpg|jpeg|gif|bmp|webp)$/i.test(file)) {
+                  // cleanContent가 빈 문자열이면 type/file, 그렇지 않으면 type/content/file 형태로 구성
+                  const imagePath = cleanContent
+                    ? `${type}/${cleanContent}/${file}`
+                    : `${type}/${file}`;
+                  images.push(
+                    `${API_BASE}/s3-image?path=${encodeURIComponent(imagePath)}`
+                  );
+                }
+              });
+            }
+
+            // 여전히 이미지가 없으면 Content가 비어있다고 처리
+            if (images.length === 0) {
+              console.log(
+                `Step ${step.Step}: ${type} - 폴더에 이미지 파일이 없어서 건너뜀 (${type}/${cleanContent})`
+              );
+              return [];
+            }
+          } else {
+            console.error(
+              `S3 폴더 조회 실패: ${response.status} - ${type}/${cleanContent}`
+            );
+            // S3 폴더 조회 실패 시에도 빈 배열 반환
+            return [];
+          }
+        } catch (error) {
+          console.error("S3 폴더 목록 조회 오류:", error);
+          return [];
+        }
+
+        return images;
+      }
+
+      // 성경 구절 가져오기
+      async function getBibleVerses(bibleInfo) {
+        try {
+          const response = await fetch(
+            `${API_BASE}/bible?book=${encodeURIComponent(
+              bibleInfo.book
+            )}&chapter=${bibleInfo.chapter}&startVerse=${
+              bibleInfo.startVerse
+            }&endVerse=${bibleInfo.endVerse}`
+          );
+          if (!response.ok) {
+            throw new Error("성경 구절을 가져올 수 없습니다.");
+          }
+          return await response.json();
+        } catch (error) {
+          console.error("성경 구절 조회 오류:", error);
+          return null;
+        }
+      }
+
+      // 슬라이드 정리 함수
+      function cleanupSlides() {
+        const container = document.querySelector(".presentation-container");
+        const slides = container.querySelectorAll(".slide");
+        slides.forEach((slide) => {
+          if (!slide.classList.contains("active")) {
+            slide.remove();
+          }
+        });
+      }
+
+      // 슬라이드 표시
+      async function showSlide(index) {
+        if (index < 0 || index >= slides.length) return;
+
+        const container = document.querySelector(".presentation-container");
+        const currentSlideElement = container.querySelector(".slide.active");
+        const newSlide = slides[index];
+
+        // 유형이 바뀌는지 확인 (같은 유형 내에서는 페이드 전환, 다른 유형에서는 즉시 전환)
+        const isTypeChange =
+          currentSlideElement &&
+          currentSlideElement.dataset.stepType !== newSlide.step.Type;
+
+        // 기존 모든 슬라이드 제거 (겹침 방지)
+        const existingSlides = container.querySelectorAll(".slide");
+        existingSlides.forEach((slide) => {
+          if (slide !== currentSlideElement) {
+            slide.remove();
+          }
+        });
+
+        // 새 슬라이드 생성
+        const slideElement = document.createElement("div");
+        slideElement.className = "slide";
+        slideElement.dataset.stepType = newSlide.step.Type; // 유형 정보 저장
+
+        // 성경인 경우
+        if (newSlide.step.Type === "성경") {
+          const bibleContent = document.createElement("div");
+          bibleContent.className = "bible-content";
+
+          const title = document.createElement("div");
+          title.className = "bible-title";
+          title.textContent = `${newSlide.step.Content.book} ${newSlide.step.Content.chapter}장`;
+          bibleContent.appendChild(title);
+
+          // 성경 구절 컨테이너 생성
+          const versesContainer = document.createElement("div");
+          versesContainer.className = "bible-verses-container";
+
+          // 성경 구절 가져오기
+          const verses = await getBibleVerses(newSlide.step.Content);
+          if (verses && verses.length > 0) {
+            // strongVerse 배열 확인
+            const strongVerses = newSlide.step.Content.strongVerse || [];
+
+            verses.forEach((verse) => {
+              const verseElement = document.createElement("div");
+              verseElement.className = "bible-verse";
+
+              // 구절 번호 요소 생성
+              const verseNumberElement = document.createElement("span");
+              verseNumberElement.className = "verse-number";
+              verseNumberElement.textContent = `${verse.verse}절`;
+              verseElement.appendChild(verseNumberElement);
+
+              // 구절 내용을 줄 단위로 처리
+              const contentLines = verse.content.split("\n");
+              let hasStrongVerse = false;
+
+              contentLines.forEach((line, lineIndex) => {
+                const lineElement = document.createElement("div");
+                lineElement.className = "bible-text-line";
+
+                // strongVerse 배열에 현재 구절 번호가 포함되어 있는지 확인
+                if (strongVerses.includes(verse.verse)) {
+                  lineElement.classList.add("strong");
+                  hasStrongVerse = true;
+                }
+
+                lineElement.textContent = line;
+                verseElement.appendChild(lineElement);
+              });
+
+              // 강조된 구절이 있는 경우 클래스 추가
+              if (hasStrongVerse) {
+                verseElement.classList.add("has-strong-verse");
+              }
+
+              versesContainer.appendChild(verseElement);
+            });
+            bibleContent.appendChild(versesContainer);
+          } else {
+            const errorElement = document.createElement("div");
+            errorElement.className = "error";
+            errorElement.textContent = "성경 구절을 불러올 수 없습니다.";
+            versesContainer.appendChild(errorElement);
+            bibleContent.appendChild(versesContainer);
+          }
+
+          slideElement.appendChild(bibleContent);
+
+          // 폰트 자동 조정
+          setTimeout(() => {
+            autoFitBibleVerses(
+              bibleContent.querySelector(".bible-verses-container")
+            );
+          }, 0);
+        } else if (newSlide.step.Type === "찬양") {
+          const imageElement = document.createElement("div");
+          imageElement.className = "slide-image-16by9";
+          const img = document.createElement("img");
+
+          // API에서 이미지 데이터 가져오기
+          try {
+            const response = await fetch(newSlide.imagePath);
+            if (response.ok) {
+              const imageData = await response.json();
+              img.src = imageData.dataUrl;
+            } else {
+              console.error(
+                `이미지 로딩 실패: ${newSlide.imagePath} - ${response.status}`
+              );
+              throw new Error(
+                `이미지를 불러올 수 없습니다. (${response.status})`
+              );
+            }
+          } catch (error) {
+            console.error(`이미지 로딩 오류: ${newSlide.imagePath}`, error);
+            // 교독, 찬송, 찬양 유형의 경우 이미지가 없어도 다음 단계로 진행
+            if (
+              newSlide.step.Type === "교독" ||
+              newSlide.step.Type === "찬송" ||
+              newSlide.step.Type === "찬양"
+            ) {
+              console.log(
+                `Step ${newSlide.step.Step}: ${newSlide.step.Type} - 이미지가 없어서 건너뜀`
+              );
+              // 빈 슬라이드 생성하여 다음 단계로 진행
+              slideElement.innerHTML = `<div class="error">${newSlide.step.Type} 이미지를 찾을 수 없습니다: ${newSlide.step.Content}</div>`;
+            } else {
+              slideElement.innerHTML = `<div class="error">이미지를 불러올 수 없습니다: ${newSlide.imagePath}</div>`;
+            }
+            container.appendChild(slideElement);
+            return;
+          }
+
+          img.alt = `${newSlide.step.Type} - ${newSlide.step.Content}`;
+          img.className = "slide-image-cover";
+
+          imageElement.appendChild(img);
+          slideElement.appendChild(imageElement);
+        } else {
+          // 이미지인 경우
+          const img = document.createElement("img");
+
+          // API에서 이미지 데이터 가져오기
+          try {
+            const response = await fetch(newSlide.imagePath);
+            if (response.ok) {
+              const imageData = await response.json();
+              img.src = imageData.dataUrl;
+            } else {
+              throw new Error("이미지를 불러올 수 없습니다.");
+            }
+          } catch (error) {
+            slideElement.innerHTML = `<div class="error">이미지를 불러올 수 없습니다: ${newSlide.imagePath}</div>`;
+            container.appendChild(slideElement);
+            return;
+          }
+
+          img.alt = `${newSlide.step.Type} - ${newSlide.step.Content}`;
+
+          slideElement.appendChild(img);
+        }
+
+        container.appendChild(slideElement);
+
+        if (isTypeChange) {
+          // 유형이 바뀌는 경우: 부드러운 페이드 전환 (화면 초기화)
+          if (currentSlideElement) {
+            currentSlideElement.classList.add("fade-out");
+          }
+
+          // 새 슬라이드 페이드 인
+          setTimeout(() => {
+            slideElement.classList.add("active");
+          }, 50);
+
+          // 이전 슬라이드 제거
+          setTimeout(() => {
+            if (currentSlideElement) {
+              currentSlideElement.remove();
+            }
+          }, 270);
+        } else {
+          // 같은 유형 내에서의 전환: 즉시 전환
+          if (currentSlideElement) {
+            currentSlideElement.remove(); // 이전 슬라이드 즉시 제거
+          }
+          slideElement.classList.add("active"); // 새 슬라이드 즉시 표시
+        }
+
+        currentSlideIndex = index;
+
+        // 슬라이드 정보 업데이트
+        updateSlideInfo(newSlide);
+        updateSlideCounter();
+
+        // 전환 완료 후 정리
+        setTimeout(() => {
+          cleanupSlides();
+        }, 300);
+      }
+
+      // 슬라이드 정보 업데이트
+      function updateSlideInfo(slide) {
+        const infoElement = document.querySelector(".slide-info");
+        infoElement.textContent = `Step ${slide.step.Step}: ${slide.step.Type} - ${slide.step.Content}`;
+      }
+
+      // 슬라이드 카운터 업데이트
+      function updateSlideCounter() {
+        const counterElement = document.querySelector(".slide-counter");
+        counterElement.textContent = `${currentSlideIndex + 1} / ${
+          slides.length
+        }`;
+      }
+
+      // 다음 슬라이드
+      async function nextSlide() {
+        if (currentSlideIndex < slides.length - 1) {
+          await showSlide(currentSlideIndex + 1);
+        }
+      }
+
+      // 이전 슬라이드
+      async function previousSlide() {
+        if (currentSlideIndex > 0) {
+          await showSlide(currentSlideIndex - 1);
+        }
+      }
+
+      // 자동재생 토글
+      function toggleAutoPlay() {
+        if (isAutoPlaying) {
+          stopAutoPlay();
+        } else {
+          startAutoPlay();
+        }
+      }
+
+      // 자동재생 시작
+      function startAutoPlay() {
+        isAutoPlaying = true;
+        document.getElementById("autoPlayBtn").textContent = "정지";
+        autoPlayInterval = setInterval(() => {
+          if (currentSlideIndex < slides.length - 1) {
+            nextSlide();
+          } else {
+            stopAutoPlay();
+          }
+        }, 1000); // 1초마다 (3배 빠르게)
+      }
+
+      // 자동재생 정지
+      function stopAutoPlay() {
+        isAutoPlaying = false;
+        document.getElementById("autoPlayBtn").textContent = "자동재생";
+        if (autoPlayInterval) {
+          clearInterval(autoPlayInterval);
+          autoPlayInterval = null;
+        }
+      }
+
+      // 전체화면 토글
+      function toggleFullscreen() {
+        if (!document.fullscreenElement) {
+          document.documentElement.requestFullscreen();
+        } else {
+          document.exitFullscreen();
+        }
+      }
+
+      // 전체화면 상태 감지
+      function handleFullscreenChange() {
+        const container = document.querySelector(".presentation-container");
+        if (document.fullscreenElement) {
+          container.classList.add("fullscreen");
+        } else {
+          container.classList.remove("fullscreen");
+        }
+
+        // 전체화면 모드 변경 시 성경 구절 폰트 크기 재조정
+        const currentSlide = container.querySelector(".slide.active");
+        if (currentSlide && currentSlide.dataset.stepType === "성경") {
+          const versesContainer = currentSlide.querySelector(
+            ".bible-verses-container"
+          );
+          if (versesContainer) {
+            setTimeout(() => {
+              autoFitBibleVerses(versesContainer);
+            }, 100); // DOM 업데이트 후 실행
+          }
+        }
+      }
+
+      // 전체화면 이벤트 리스너
+      document.addEventListener("fullscreenchange", handleFullscreenChange);
+      document.addEventListener(
+        "webkitfullscreenchange",
+        handleFullscreenChange
+      );
+      document.addEventListener("mozfullscreenchange", handleFullscreenChange);
+      document.addEventListener("MSFullscreenChange", handleFullscreenChange);
+
+      // 브라우저 크기 변경 이벤트 리스너
+      let resizeTimeout;
+      window.addEventListener("resize", function () {
+        // 디바운싱: 연속된 resize 이벤트를 방지
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(() => {
+          handleResize();
+        }, 150); // 150ms 후 실행
+      });
+
+      // 브라우저 크기 변경 처리 함수
+      function handleResize() {
+        const currentSlide = document.querySelector(".slide.active");
+        if (currentSlide && currentSlide.dataset.stepType === "성경") {
+          const versesContainer = currentSlide.querySelector(
+            ".bible-verses-container"
+          );
+          if (versesContainer) {
+            // 약간의 지연을 두고 자동 조정 실행 (DOM 업데이트 완료 후)
+            setTimeout(() => {
+              autoFitBibleVerses(versesContainer);
+            }, 100);
+          }
+        }
+      }
+
+      // 에러 표시
+      function showError(message) {
+        const loadingElement = document.querySelector(".loading");
+        loadingElement.style.display = "none";
+
+        const errorElement = document.createElement("div");
+        errorElement.className = "error";
+        errorElement.textContent = message;
+        document
+          .querySelector(".presentation-container")
+          .appendChild(errorElement);
+      }
+
+      // 키보드 이벤트
+      document.addEventListener("keydown", function (event) {
+        switch (event.key) {
+          case "ArrowRight":
+          case " ":
+            event.preventDefault();
+            nextSlide();
+            break;
+          case "ArrowLeft":
+            event.preventDefault();
+            previousSlide();
+            break;
+          case "PageUp":
+            event.preventDefault();
+            nextSlide();
+            break;
+          case "PageDown":
+            event.preventDefault();
+            previousSlide();
+            break;
+          case "Escape":
+            if (document.fullscreenElement) {
+              document.exitFullscreen();
+            }
+            break;
+          case "f":
+          case "F":
+            event.preventDefault();
+            toggleFullscreen();
+            break;
+          case "a":
+          case "A":
+            event.preventDefault();
+            toggleAutoPlay();
+            break;
+        }
+      });
+
+      // 자동 폰트 크기/줄 간격 조정 함수
+      function autoFitBibleVerses(container) {
+        if (!container) return;
+
+        const isFullscreen = document
+          .querySelector(".presentation-container")
+          .classList.contains("fullscreen");
+
+        // 컨테이너 높이를 더 정확하게 계산
+        const containerRect = container.getBoundingClientRect();
+        const maxHeight =
+          containerRect.height ||
+          container.clientHeight ||
+          container.parentElement.clientHeight;
+
+        // 전체화면 모드와 일반 모드에 따라 다른 시작값 설정 (15% 증가된 기준)
+        let fontSize = isFullscreen ? 4.025 : 3.22; // em, 시작값 (15% 증가)
+        let lineHeight = isFullscreen ? 1.8 : 1.6;
+        const minFontSize = isFullscreen ? 2.53 : 1.38; // em, 최소값 (15% 증가)
+        const minLineHeight = isFullscreen ? 1.4 : 1.15;
+
+        const verses = container.querySelectorAll(".bible-verse");
+
+        // 먼저 모든 구절의 스타일을 초기화
+        verses.forEach((verse) => {
+          verse.style.fontSize = "";
+          verse.style.lineHeight = "";
+          verse.style.marginBottom = "";
+          verse.style.padding = "";
+
+          const textLines = verse.querySelectorAll(".bible-text-line");
+          textLines.forEach((line) => {
+            line.style.lineHeight = "";
+            line.style.marginBottom = "";
+            line.style.padding = "";
+          });
+        });
+
+        // 강조된 구절이 있는 경우 높이 제한 해제
+        verses.forEach((verse) => {
+          if (verse.classList.contains("has-strong-verse")) {
+            verse.style.maxHeight = "none";
+            verse.style.overflow = "visible";
+          }
+        });
+
+        // 폰트 크기 자동 조정 - 더 세밀한 조정
+        let adjustmentCount = 0;
+        const maxAdjustments = 100; // 무한 루프 방지
+
+        while (
+          container.scrollHeight > maxHeight &&
+          fontSize > minFontSize &&
+          adjustmentCount < maxAdjustments
+        ) {
+          fontSize -= 0.05; // 더 작은 단위로 조정
+          lineHeight -= 0.02; // 줄 간격도 더 세밀하게 조정
+          verses.forEach((v) => {
+            v.style.fontSize = fontSize + "em";
+            v.style.lineHeight = lineHeight;
+          });
+          adjustmentCount++;
+        }
+
+        // 간단하고 안정적인 간격 적용
+        verses.forEach((verse) => {
+          const textLines = verse.querySelectorAll(".bible-text-line");
+
+          if (isFullscreen) {
+            // 전체화면 모드: 간단한 간격 설정
+            verse.style.marginBottom = "30px";
+            verse.style.padding = "8px 0";
+
+            // 텍스트 라인 간격
+            textLines.forEach((line) => {
+              line.style.lineHeight = "1.8";
+              line.style.marginBottom = "6px";
+              line.style.padding = "2px 0";
+            });
+          } else {
+            // 일반 모드: 기본 간격 설정
+            verse.style.marginBottom = "25px";
+            verse.style.padding = "6px 0";
+
+            // 텍스트 라인 간격
+            textLines.forEach((line) => {
+              line.style.lineHeight = "1.6";
+              line.style.marginBottom = "5px";
+              line.style.padding = "1px 0";
+            });
+          }
+        });
+
+        // 최종 확인: 여전히 넘치면 추가 조정
+        if (container.scrollHeight > maxHeight && fontSize > minFontSize) {
+          fontSize = Math.max(fontSize - 0.3, minFontSize);
+          lineHeight = Math.max(lineHeight - 0.15, minLineHeight);
+          verses.forEach((v) => {
+            v.style.fontSize = fontSize + "em";
+            v.style.lineHeight = lineHeight;
+          });
+        }
+      }
+
+      // 교회별 worship.json 로드 함수 추가
+      async function loadWorshipData(folder) {
+        try {
+          let url = `${API_BASE}/worship`;
+          if (folder) url += `?folder=${encodeURIComponent(folder)}`;
+          const response = await fetch(url);
+          if (!response.ok)
+            throw new Error("worship.json 파일을 찾을 수 없습니다.");
+          worshipData = await response.json();
+          await processWorshipData();
+        } catch (error) {
+          showError("예배 데이터를 불러오는데 실패했습니다: " + error.message);
+        }
+      }
+
+      // 페이지 로드 시 데이터 로드
+      window.addEventListener("load", loadWorshipFolders);
+    </script>
+  </body>
+</html>

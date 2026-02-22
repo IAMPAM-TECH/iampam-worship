@@ -1,0 +1,20 @@
+{
+  "name": "hishalom-worship",
+  "version": "1.0.0",
+  "description": "하이샬롬 예배자동화 시스템",
+  "scripts": {
+    "upload-bible": "node upload-bible-json.js",
+    "deploy:dev": "cd serverless && npm run deploy:dev",
+    "deploy:prod": "cd serverless && npm run deploy:prod"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.490.0"
+  },
+  "keywords": [
+    "worship",
+    "church",
+    "automation"
+  ],
+  "author": "김완중집사",
+  "license": "MIT"
+} 

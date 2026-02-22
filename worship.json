@@ -1,0 +1,370 @@
+{
+  "Date": "2025.8.10",
+  "Worship": [
+    {
+      "Step": "1",
+      "Type": "간지",
+      "Content": "예배준비",
+      "Lock": true
+    },
+    {
+      "Type": "찬양",
+      "Step": "2",
+      "Content": "모든 능력과 권세/",
+      "Lock": false
+    },
+    {
+      "Type": "찬양",
+      "Step": "3",
+      "Content": "전능하신 나의 주 하나님/",
+      "Lock": false
+    },
+    {
+      "Type": "찬양",
+      "Step": "4",
+      "Content": "내가매일기쁘게/",
+      "Lock": false
+    },
+    {
+      "Type": "찬양",
+      "Step": "5",
+      "Content": "502장-빛의 사자들이여/",
+      "Lock": false
+    },
+    {
+      "Type": "간지",
+      "Step": "6",
+      "Content": "예배준비",
+      "Lock": true
+    },
+    {
+      "Type": "간지",
+      "Step": "7",
+      "Content": "만복의근원하나님1",
+      "Lock": true
+    },
+    {
+      "Type": "간지",
+      "Step": "8",
+      "Content": "만복의근원하나님2",
+      "Lock": true
+    },
+    {
+      "Type": "간지",
+      "Step": "9",
+      "Content": "묵상기도",
+      "Lock": true
+    },
+    {
+      "Type": "찬송",
+      "Step": "10",
+      "Content": "036장 주예수이름높이어(통36)/",
+      "Lock": false
+    },
+    {
+      "Type": "교독",
+      "Step": "11",
+      "Content": "055-시편127편/",
+      "Lock": false
+    },
+    {
+      "Type": "간지",
+      "Step": "12",
+      "Content": "사도신경1",
+      "Lock": true
+    },
+    {
+      "Type": "간지",
+      "Step": "13",
+      "Content": "사도신경2",
+      "Lock": true
+    },
+    {
+      "Type": "찬송",
+      "Step": "14",
+      "Content": "370장 주안에있는나에게(통455)/",
+      "Lock": false
+    },
+    {
+      "Type": "간지",
+      "Step": "15",
+      "Content": "대표기도",
+      "Lock": true
+    },
+    {
+      "Type": "간지",
+      "Step": "16",
+      "Content": "말씀선포",
+      "Lock": true
+    },
+    {
+      "Type": "성경",
+      "Content": {
+        "testament": "구약",
+        "book": "빌립보서",
+        "chapter": 1,
+        "startVerse": 1,
+        "endVerse": 6,
+        "strongVerse": [
+          2,
+          4,
+          6
+        ]
+      },
+      "Step": "17"
+    },
+    {
+      "Type": "성경",
+      "Step": "18",
+      "Content": {
+        "chapter": 1,
+        "startVerse": 1,
+        "strongVerse": [
+          1,
+          2
+        ],
+        "book": "빌립보서",
+        "testament": "신약",
+        "endVerse": 6,
+        "Lock": false
+      },
+      "Lock": false
+    },
+    {
+      "Type": "성경",
+      "Step": "19",
+      "Content": {
+        "chapter": 1,
+        "testament": "신약",
+        "startVerse": 7,
+        "endVerse": 11,
+        "book": "빌립보서",
+        "strongVerse": [
+          9,
+          10,
+          11
+        ]
+      },
+      "Lock": false
+    },
+    {
+      "Step": "20",
+      "Type": "성경",
+      "Content": {
+        "chapter": 1,
+        "testament": "신약",
+        "startVerse": 9,
+        "endVerse": 14,
+        "book": "빌립보서",
+        "strongVerse": [
+          9,
+          10,
+          11
+        ]
+      },
+      "Lock": false
+    },
+    {
+      "Step": "21",
+      "Type": "성경",
+      "Content": {
+        "chapter": 1,
+        "testament": "신약",
+        "startVerse": 15,
+        "endVerse": 19,
+        "book": "빌립보서",
+        "strongVerse": [
+          15,
+          16,
+          17
+        ]
+      },
+      "Lock": false
+    },
+    {
+      "Step": "22",
+      "Type": "성경",
+      "Content": {
+        "chapter": 1,
+        "testament": "신약",
+        "startVerse": 20,
+        "endVerse": 25,
+        "book": "빌립보서",
+        "strongVerse": [
+          20,
+          21
+        ]
+      },
+      "Lock": false
+    },
+    {
+      "Step": "23",
+      "Type": "성경",
+      "Content": {
+        "chapter": 1,
+        "testament": "신약",
+        "startVerse": 26,
+        "endVerse": 30,
+        "book": "빌립보서",
+        "strongVerse": [
+          27
+        ]
+      },
+      "Lock": false
+    },
+    {
+      "Step": "24",
+      "Type": "성경",
+      "Content": {
+        "chapter": 2,
+        "testament": "신약",
+        "startVerse": 1,
+        "endVerse": 4,
+        "book": "빌립보서",
+        "strongVerse": []
+      },
+      "Lock": false
+    },
+    {
+      "Step": "25",
+      "Type": "성경",
+      "Content": {
+        "chapter": 2,
+        "testament": "신약",
+        "startVerse": 5,
+        "endVerse": 10,
+        "book": "빌립보서",
+        "strongVerse": [
+          5,
+          6,
+          7,
+          8
+        ]
+      },
+      "Lock": false
+    },
+    {
+      "Step": "26",
+      "Type": "성경",
+      "Content": {
+        "chapter": 2,
+        "testament": "신약",
+        "startVerse": 9,
+        "endVerse": 14,
+        "book": "빌립보서",
+        "strongVerse": [
+          12
+        ]
+      },
+      "Lock": false
+    },
+    {
+      "Step": "27",
+      "Type": "성경",
+      "Content": {
+        "chapter": 2,
+        "testament": "신약",
+        "startVerse": 15,
+        "endVerse": 18,
+        "book": "빌립보서",
+        "strongVerse": [
+          17,
+          18
+        ]
+      },
+      "Lock": false
+    },
+    {
+      "Step": "28",
+      "Type": "성경",
+      "Content": {
+        "chapter": 2,
+        "testament": "신약",
+        "startVerse": 19,
+        "endVerse": 24,
+        "book": "빌립보서",
+        "strongVerse": []
+      },
+      "Lock": false
+    },
+    {
+      "Step": "29",
+      "Type": "성경",
+      "Content": {
+        "chapter": 2,
+        "testament": "신약",
+        "startVerse": 25,
+        "endVerse": 28,
+        "book": "빌립보서",
+        "strongVerse": [
+          25,
+          28
+        ]
+      },
+      "Lock": false
+    },
+    {
+      "Step": "30",
+      "Type": "성경",
+      "Content": {
+        "chapter": 2,
+        "testament": "신약",
+        "startVerse": 29,
+        "endVerse": 30,
+        "book": "빌립보서",
+        "strongVerse": [
+          30
+        ]
+      },
+      "Lock": false
+    },
+    {
+      "Type": "찬송",
+      "Step": "31",
+      "Content": "220장 사랑하는주님앞에(통278)/",
+      "Lock": false
+    },
+    {
+      "Type": "간지",
+      "Step": "32",
+      "Content": "교회소식",
+      "Lock": true
+    },
+    {
+      "Type": "간지",
+      "Step": "33",
+      "Content": "봉헌기도",
+      "Lock": true
+    },
+    {
+      "Type": "간지",
+      "Step": "34",
+      "Content": "주기도문1",
+      "Lock": true
+    },
+    {
+      "Type": "간지",
+      "Step": "35",
+      "Content": "주기도문2",
+      "Lock": true
+    },
+    {
+      "Type": "간지",
+      "Step": "36",
+      "Content": "주기도문3",
+      "Lock": true
+    },
+    {
+      "Type": "간지",
+      "Step": "37",
+      "Content": "주기도문4",
+      "Lock": true
+    },
+    {
+      "Type": "간지",
+      "Step": "38",
+      "Content": "축도",
+      "Lock": true
+    }
+  ]
+}

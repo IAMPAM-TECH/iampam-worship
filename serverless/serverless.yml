@@ -1,0 +1,177 @@
+service: hishalom-worship-backend
+
+frameworkVersion: "3"
+
+provider:
+  name: aws
+  runtime: nodejs20.x
+  region: ap-northeast-2
+  environment:
+    S3_BUCKET_NAME: ${env:S3_BUCKET_NAME, 'hishalom-data'}
+    FRONTEND_URL: ${env:FRONTEND_URL, 'https://worship.iampam.io'}
+    STAGE: ${sls:stage}
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - s3:GetObject
+            - s3:PutObject
+            - s3:DeleteObject
+            - s3:ListBucket
+          Resource:
+            - arn:aws:s3:::${env:S3_BUCKET_NAME, 'hishalom-data'}
+            - arn:aws:s3:::${env:S3_BUCKET_NAME, 'hishalom-data'}/*
+        - Effect: Allow
+          Action:
+            - dynamodb:GetItem
+            - dynamodb:PutItem
+            - dynamodb:UpdateItem
+            - dynamodb:DeleteItem
+            - dynamodb:Query
+            - dynamodb:Scan
+          Resource:
+            - arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/worship-${sls:stage}
+            - arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/worship-${sls:stage}/index/*
+        - Effect: Allow
+          Action:
+            - transcribe:StartTranscriptionJob
+            - transcribe:GetTranscriptionJob
+            - transcribe:ListTranscriptionJobs
+            - transcribe:DeleteTranscriptionJob
+          Resource: "*"
+
+functions:
+  api:
+    handler: handler.handler
+    events:
+      - httpApi:
+          path: /{proxy+}
+          method: "*"
+          cors:
+            allowedOrigins:
+              - "https://worship.iampam.io"
+              - "https://biblecontents.iampam.io"
+              - "https://hishalom-frontend.s3.ap-northeast-2.amazonaws.com"
+              - "https://hishalom-frontend.s3-website.ap-northeast-2.amazonaws.com"
+              - "http://127.0.0.1:5500"
+              - "http://localhost:5500"
+              - "http://127.0.0.1:3000"
+              - "http://localhost:3000"
+              - "http://127.0.0.1:8080"
+              - "http://localhost:8080"
+            allowedHeaders:
+              - "Content-Type"
+              - "X-Amz-Date"
+              - "Authorization"
+              - "X-Api-Key"
+              - "X-Amz-Security-Token"
+              - "X-Amz-User-Agent"
+              - "Origin"
+              - "X-Requested-With"
+              - "Accept"
+              - "expires"
+              - "cache-control"
+              - "pragma"
+              - "if-modified-since"
+              - "if-none-match"
+            allowedMethods:
+              - "GET"
+              - "POST"
+              - "PUT"
+              - "DELETE"
+              - "OPTIONS"
+            allowCredentials: true
+
+resources:
+  Conditions:
+    CreateDynamoTableCondition:
+      Fn::Equals:
+        - ${sls:stage}
+        - dev
+  Resources:
+    # 프론트엔드 S3 버킷 (기존 버킷 사용)
+    # FrontendBucket:
+    #   Type: AWS::S3::Bucket
+    #   Properties:
+    #     BucketName: hishalom-frontend
+    #     PublicAccessBlockConfiguration:
+    #       BlockPublicAcls: false
+    #       BlockPublicPolicy: false
+    #       IgnorePublicAcls: false
+    #       RestrictPublicBuckets: false
+    #     WebsiteConfiguration:
+    #       IndexDocument: index.html
+    #       ErrorDocument: index.html
+    #     CorsConfiguration:
+    #       CorsRules:
+    #         - AllowedHeaders:
+    #             - "*"
+    #           AllowedMethods:
+    #             - GET
+    #             - HEAD
+    #             - OPTIONS
+    #           AllowedOrigins:
+    #             - "https://hishalom-frontend.s3.ap-northeast-2.amazonaws.com"
+    #             - "https://hishalom-frontend.s3-website.ap-northeast-2.amazonaws.com"
+    #             - "https://worship.iampam.io"
+    #             - "http://127.0.0.1:5500"
+    #             - "http://localhost:5500"
+    #             - "http://127.0.0.1:3000"
+    #             - "http://localhost:3000"
+    #             - "http://127.0.0.1:8080"
+    #             - "http://localhost:8080"
+    #           ExposedHeaders:
+    #             - ETag
+    #           MaxAge: 3000
+
+    # 프론트엔드 버킷 정책 (기존 버킷 사용)
+    # FrontendBucketPolicy:
+    #   Type: AWS::S3::BucketPolicy
+    #   Properties:
+    #     Bucket: !Ref FrontendBucket
+    #     PolicyDocument:
+    #       Statement:
+    #         - Sid: PublicReadGetObject
+    #           Effect: Allow
+    #           Principal: "*"
+    #           Action: s3:GetObject
+    #           Resource: !Sub "${FrontendBucket}/*"
+
+    WorshipDataTable:
+      Type: AWS::DynamoDB::Table
+      DeletionPolicy: Retain
+      UpdateReplacePolicy: Retain
+      Properties:
+        TableName: worship-${sls:stage}
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: pk
+            AttributeType: S
+          - AttributeName: sk
+            AttributeType: S
+          - AttributeName: folder
+            AttributeType: S
+          - AttributeName: date
+            AttributeType: S
+        KeySchema:
+          - AttributeName: pk
+            KeyType: HASH
+          - AttributeName: sk
+            KeyType: RANGE
+        GlobalSecondaryIndexes:
+          - IndexName: folder-date-index
+            KeySchema:
+              - AttributeName: folder
+                KeyType: HASH
+              - AttributeName: date
+                KeyType: RANGE
+            Projection:
+              ProjectionType: ALL
+        TimeToLiveSpecification:
+          AttributeName: ttl
+          Enabled: true
+      Condition: CreateDynamoTableCondition
+
+plugins:
+  - serverless-offline
