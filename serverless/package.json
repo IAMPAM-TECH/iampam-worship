@@ -4,7 +4,7 @@
   "description": "하이샬롬 예배자동화 Serverless Backend",
   "main": "handler.js",
   "engines": {
-    "node": ">=20.0.0"
+    "node": ">=24.0.0"
   },
   "scripts": {
     "dev": "serverless offline start --stage dev",

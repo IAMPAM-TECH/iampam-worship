@@ -1789,7 +1789,7 @@
         try {
           const timestamp = new Date().getTime();
           const res = await fetch(
-            `/api/s3-explorer?path=${encodeURIComponent(
+            `${API_BASE}/s3-explorer?path=${encodeURIComponent(
               safeFolderPath + "/"
             )}&_t=${timestamp}`,
             {
@@ -2011,7 +2011,7 @@
           // 캐시 무효화를 위한 타임스탬프 추가
           const timestamp = new Date().getTime();
           const response = await fetch(
-            `/api/s3-explorer?path=${encodeURIComponent(
+            `${API_BASE}/s3-explorer?path=${encodeURIComponent(
               currentPath
             )}&_t=${timestamp}`,
             {
@@ -2035,7 +2035,7 @@
           setTimeout(async () => {
             try {
               const refreshResponse = await fetch(
-                `/api/s3-explorer?path=${encodeURIComponent(
+                `${API_BASE}/s3-explorer?path=${encodeURIComponent(
                   currentPath
                 )}&_t=${Date.now()}`,
                 {

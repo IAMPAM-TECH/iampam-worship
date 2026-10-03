@@ -988,6 +988,53 @@ app.post('/api/s3-upload', async (req, res) => {
   }
 });
 
+// S3 순차 파일 업로드 (찬양 page_NNN.png 등)
+app.post('/api/s3-upload-sequential', async (req, res) => {
+  try {
+    const { folderPath, files } = req.body;
+
+    if (!folderPath || !Array.isArray(files) || files.length === 0) {
+      return res.status(400).json({ error: '필수 매개변수가 누락되었습니다.' });
+    }
+
+    const uploaded = [];
+    for (const file of files) {
+      const { fileName, data } = file;
+      if (!fileName || !data) {
+        return res.status(400).json({ error: '파일명 또는 데이터가 누락되었습니다.' });
+      }
+
+      const base64Payload = data.includes(',') ? data.split(',')[1] : data;
+      const buffer = Buffer.from(base64Payload, 'base64');
+      const key = `${folderPath}/${fileName}`;
+      const contentType =
+        fileName.toLowerCase().endsWith('.png')
+          ? 'image/png'
+          : fileName.toLowerCase().endsWith('.jpg') || fileName.toLowerCase().endsWith('.jpeg')
+            ? 'image/jpeg'
+            : 'application/octet-stream';
+
+      const command = new PutObjectCommand({
+        Bucket: S3_BUCKET_NAME,
+        Key: key,
+        Body: buffer,
+        ContentType: contentType
+      });
+
+      await s3Client.send(command);
+      uploaded.push(key);
+    }
+
+    res.json({
+      message: '파일이 성공적으로 업로드되었습니다.',
+      uploaded
+    });
+  } catch (error) {
+    console.error('S3 순차 파일 업로드 오류:', error);
+    res.status(500).json({ error: '파일 업로드에 실패했습니다.' });
+  }
+});
+
 // S3 파일 탐색 API
 app.get('/api/s3-explorer', async (req, res) => {
   try {
@@ -1121,6 +1168,44 @@ app.get('/api/s3-folder/:type/:content', async (req, res) => {
   } catch (error) {
     console.error('S3 폴더 목록 조회 오류:', error);
     res.status(500).json({ error: '폴더 목록을 불러올 수 없습니다.' });
+  }
+});
+
+// S3 폴더 생성
+app.post('/api/s3-create-folder', async (req, res) => {
+  try {
+    const { folderPath, folderName } = req.body;
+
+    if (!folderName || !folderName.trim()) {
+      return res.status(400).json({ error: '폴더 이름이 필요합니다.' });
+    }
+
+    const trimmedName = folderName.trim();
+    const parent = (folderPath || '').replace(/\/$/, '');
+    const key = parent ? `${parent}/${trimmedName}/` : `${trimmedName}/`;
+
+    const listCommand = new ListObjectsV2Command({
+      Bucket: S3_BUCKET_NAME,
+      Prefix: key,
+      MaxKeys: 1
+    });
+    const existing = await s3Client.send(listCommand);
+    if (existing.Contents && existing.Contents.length > 0) {
+      return res.status(409).json({ error: '이미 존재하는 폴더입니다.' });
+    }
+
+    const command = new PutObjectCommand({
+      Bucket: S3_BUCKET_NAME,
+      Key: key,
+      Body: '',
+      ContentType: 'application/x-directory'
+    });
+
+    await s3Client.send(command);
+    res.json({ message: '폴더가 성공적으로 생성되었습니다.', folderKey: key });
+  } catch (error) {
+    console.error('S3 폴더 생성 오류:', error);
+    res.status(500).json({ error: '폴더 생성에 실패했습니다.' });
   }
 });
 
